@@ -5,9 +5,29 @@
 
 #include "u8g2.h"
 
+
+//#define D12832
+#define D12864
+
+
+#ifdef D12832
 #define MENU_SMALL_FONT u8g2_font_baby_tr
 #define MENU_NORMAL_FONT u8g2_font_ncenR08_tf
-#define MENU_BIG_NUM u8g2_font_ncenR18_tf
+#define MENU_LARGE_FONT u8g2_font_ncenR08_tf
+#define MENU_BIG_NUM u8g2_font_ncenR18_tn
+#define MENU_BIG_NUM_FOCUS_XO 0
+#define MENU_BIG_NUM_FOCUS_EXTRAX 0
+#endif
+
+#ifdef D12864
+#define MENU_SMALL_FONT u8g2_font_baby_tr
+#define MENU_NORMAL_FONT u8g2_font_ncenR08_tf
+#define MENU_LARGE_FONT u8g2_font_ncenR10_tf
+#define MENU_BIG_NUM u8g2_font_ncenR24_tn
+#define MENU_BIG_NUM_FOCUS_XO 0
+#define MENU_BIG_NUM_FOCUS_EXTRAX 1
+#endif
+
 
 
 typedef struct _menu_struct menu_t;
@@ -74,6 +94,7 @@ int me_cb_0_9(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_0_9_ro(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_0_23(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_0_23_ro(menu_t *menu, const me_t *me, uint8_t msg);
+int me_cb_0_9_small_ro(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_0_55(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_1_12(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_1_31(menu_t *menu, const me_t *me, uint8_t msg);
@@ -82,6 +103,7 @@ int me_cb_button_full_line(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_button_half_line(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_button_empty(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_label(menu_t *menu, const me_t *me, uint8_t msg);
+int me_cb_inv_label(menu_t *menu, const me_t *me, uint8_t msg);
 int me_cb_16x16_bitmap_button(menu_t *menu, const me_t *me, uint8_t msg);
 
 #endif

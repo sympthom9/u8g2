@@ -19,17 +19,13 @@ int main(void)
   int i;
   
   u8g2_SetupBuffer_SDL_128x64_4(&u8g2, &u8g2_cb_r0);
-  u8x8_InitDisplay(u8g2_GetU8x8(&u8g2));
-  u8x8_SetPowerSave(u8g2_GetU8x8(&u8g2), 0);  
   
-  //u8g2_SetFont(&u8g2, u8g2_font_helvB18_tf);
-  u8g2_SetFont(&u8g2, u8g2_font_ncenR08_tf);
-  
-  gui_Init(&u8g2);
+  gui_Init(&u8g2, 0);
   
   x = 50;
   y = 50;
 
+  
   for(;;)
   {
     u8g2_FirstPage(&u8g2);
@@ -37,13 +33,12 @@ int main(void)
     do
     {
       gui_Draw();
-      u8g2_SetFontDirection(&u8g2, 0);
-      u8g2_SetFont(&u8g2, u8g2_font_ncenR08_tf);
-      u8g2_DrawStr(&u8g2, x, y, "-- 123");
       i++;
       
     } while( u8g2_NextPage(&u8g2) );
    
+    
+    
     do
     {
       k = u8g_sdl_get_key();
@@ -72,7 +67,7 @@ int main(void)
 	  }
 	}
       }
-      gui_Recalculate();
+      gui_SignalTimeChange();
     }
 
     if ( k == 'h' )
@@ -83,7 +78,7 @@ int main(void)
 	gui_data.h = 0;
 	gui_data.day++;
       }
-      gui_Recalculate();
+      gui_SignalTimeChange();
     }
     
     if ( k == 273 ) y -= 1;

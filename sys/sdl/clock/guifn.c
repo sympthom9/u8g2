@@ -59,7 +59,6 @@ uint32_t get_u32_by_alarm_data(gui_alarm_t *alarm)
 void set_alarm_data_by_u32(gui_alarm_t *alarm, uint32_t u)
 {
   int i;
-  u = 0;
   for( i = 0; i < 7; i++ )
   {
     if ( (u & (1<<i)) != 0 )
@@ -110,6 +109,7 @@ void gui_alarm_calc_next_wd_alarm(uint8_t idx, uint16_t current_week_time_in_min
 	  week_time_abs *= 60;
 	  week_time_abs += gui_alarm_list[idx].m;
 	  week_time_abs += gui_alarm_list[idx].snooze_count*(uint16_t)SNOOZE_MINUTES;
+	  
 	  
 	  if ( current_week_time_in_minutes <= week_time_abs )
 	    week_time_diff = week_time_abs - current_week_time_in_minutes;
@@ -198,53 +198,80 @@ void gui_calc_next_alarm(void)
   uint8_t i;
   uint8_t lowest_i;
   uint16_t lowest_diff;
-  /* step 1: Calculate the difference to current weektime for each alarm */
-  /* result is stored in gui_alarm_list[i].na_minutes_diff */
-  for( i = 0; i < GUI_ALARM_CNT; i++ )
-    gui_alarm_calc_next_wd_alarm(i, gui_data.week_time);
+  uint8_t redo;
   
-  /* step 2: find the index with the lowest difference */
-  lowest_diff = 0x0ffff;
-  lowest_i = GUI_ALARM_CNT;
-  for( i = 0; i < GUI_ALARM_CNT; i++ )
+  do
   {
-    if ( lowest_diff > gui_alarm_list[i].na_minutes_diff )
-    {
-      lowest_diff = gui_alarm_list[i].na_minutes_diff;
-      lowest_i = i;
-    }
-  }
-  
-  
-  /* step 3: store the result */
-  gui_data.next_alarm_index = lowest_i;  /* this can be GUI_ALARM_CNT */
-  //printf("gui_calc_next_alarm gui_data.next_alarm_index=%d\n", gui_data.next_alarm_index);
-  
-  /* calculate the is_skip_possible and the is_alarm flag */
-  gui_data.is_skip_possible = 0;
-  if ( lowest_i < GUI_ALARM_CNT )
-  {
+    redo = 0;
     
-    if ( gui_alarm_list[lowest_i].na_minutes_diff <= 1 )
+    /* step 1: Calculate the difference to current weektime for each alarm */
+    /* result is stored in gui_alarm_list[i].na_minutes_diff */
+    for( i = 0; i < GUI_ALARM_CNT; i++ )
+      gui_alarm_calc_next_wd_alarm(i, gui_data.week_time+(uint16_t)gui_data.is_equal);	/* is_equal flag is used as a offset */
+    
+    /* step 2: find the index with the lowest difference */
+    lowest_diff = 0x0ffff;
+    lowest_i = GUI_ALARM_CNT;
+    for( i = 0; i < GUI_ALARM_CNT; i++ )
     {
-      if ( gui_data.is_alarm == 0 )
+      if ( lowest_diff > gui_alarm_list[i].na_minutes_diff )
       {
-	gui_data.is_alarm = 1;
-	gui_data.active_alarm_idx = lowest_i;
+	lowest_diff = gui_alarm_list[i].na_minutes_diff;
+	lowest_i = i;
       }
     }
-    else
+    
+    
+    /* step 3: store the result */
+    gui_data.next_alarm_index = lowest_i;  /* this can be GUI_ALARM_CNT */
+    //printf("gui_calc_next_alarm gui_data.next_alarm_index=%d\n", gui_data.next_alarm_index);
+    
+    /* calculate the is_skip_possible and the is_alarm flag */
+    gui_data.is_skip_possible = 0;
+    if ( lowest_i < GUI_ALARM_CNT )
     {
-      /* valid next alarm time */
-      if ( gui_alarm_list[lowest_i].skip_wd == 0 )
+      
+      if ( gui_alarm_list[lowest_i].na_minutes_diff == 0 )
       {
-	/* skip flag not yet set */
-	if ( gui_alarm_list[lowest_i].na_minutes_diff <= (uint16_t)60*(uint16_t)ALLOW_SKIP_HOURS )
+	if ( gui_data.is_equal == 0 )
 	{
-	  /* within the limit before alarm */
-	  gui_data.is_skip_possible = 1;
+	  gui_data.is_alarm = 1;
+	  gui_data.is_equal = 1;
+	  gui_data.active_alarm_idx = lowest_i;
+	  //gui_data.active_equal_idx = lowest_i;
+	  
+	  gui_data.equal_h = gui_data.h;
+	  gui_data.equal_mt = gui_data.mt;
+	  gui_data.equal_mo = gui_data.mo;
+	  
+	  redo = 1;
 	}
       }
+      else
+      {
+	
+	/* valid next alarm time */
+	if ( gui_alarm_list[lowest_i].skip_wd == 0 )
+	{
+	  /* skip flag not yet set */
+	  if ( gui_alarm_list[lowest_i].na_minutes_diff <= (uint16_t)60*(uint16_t)ALLOW_SKIP_HOURS )
+	  {
+	    /* within the limit before alarm */
+	    gui_data.is_skip_possible = 1;
+	  }
+	}
+      }
+    }
+  } while( redo );
+  
+  /* reset the equal flag */
+  if ( gui_data.is_equal != 0 )
+  {
+    if ( gui_data.equal_h != gui_data.h ||
+	  gui_data.equal_mt != gui_data.mt ||
+	  gui_data.equal_mo != gui_data.mo )
+    {
+      gui_data.is_equal = 0;
     }
   }
 }
@@ -256,6 +283,8 @@ void gui_LoadData(void)
 {
   uint32_t data[5];
   int i;
+  
+  //printf("Load Data\n");
   
   load_gui_data(data);
   for( i = 0; i < GUI_ALARM_CNT; i++ )
@@ -272,6 +301,7 @@ void gui_StoreData(void)
   for( i = 0; i < GUI_ALARM_CNT; i++ )
   {
     data[i] = get_u32_by_alarm_data(gui_alarm_list+i);
+    //printf("%d: %08lx\n", i, data[i]);
   }
   data[4] = 0;
   store_gui_data(data);
@@ -280,7 +310,6 @@ void gui_StoreData(void)
 
 
 /* recalculate all internal data */
-/* additionally the active alarm menu might be set by this function */
 void gui_Recalculate(void)
 {
   int i;
@@ -295,11 +324,57 @@ void gui_Recalculate(void)
   gui_StoreData();
 }
 
-void gui_Init(u8g2_t *u8g2)
+/* minute and/or hour has changed */
+/* additionally the active alarm menu might be set by this function */
+void gui_SignalTimeChange(void)
 {
-  menu_Init(&gui_menu, u8g2);
-  menu_SetMEList(&gui_menu, melist_display_time, 0);
+  /* recalculate dependent values */
   gui_Recalculate();
+  
+  /* setup menu */
+  menu_SetMEList(&gui_menu, melist_display_time, 0);
+  
+  /* enable alarm */
+  if ( gui_data.is_alarm != 0 )
+  {
+    menu_SetMEList(&gui_menu, melist_active_alarm_menu, 0);
+    enable_alarm();
+  }
+}
+
+void gui_Init(u8g2_t *u8g2, uint8_t is_por)
+{
+  if ( is_por == 0 )
+  {
+    /* not a POR reset, so load current values */
+    gui_LoadData();
+    /* do NOT init the display, otherwise there will be some flicker visible */
+    /* however, the GPIO subsystem still has to be setup, so call the other init procedures */
+    /* this acts like a warm start for the display */
+    /* the display setup code for the display is NOT send */
+    u8x8_gpio_Init(u8g2_GetU8x8(u8g2));
+    u8x8_cad_Init(u8g2_GetU8x8(u8g2));
+    u8x8_gpio_SetReset(u8g2_GetU8x8(u8g2), 1);
+
+    //u8g2_InitDisplay(u8g2);
+    //u8x8_d_helper_display_init(u8g2_GetU8x8(u8g2));
+
+    // u8g2_SetPowerSave(u8g2, 0);   // this will be done later
+  }
+  else
+  {
+    /* POR reset, so do NOT load any values (they will be 0 in the best case) */
+    /* instead do a proper reset of the display */
+    // u8x8_InitDisplay(u8g2_GetU8x8(&u8g2));
+    u8g2_InitDisplay(u8g2);
+    
+    // u8x8_SetPowerSave(u8g2_GetU8x8(&u8g2), 0);  
+    u8g2_SetPowerSave(u8g2, 0);
+  }
+  
+  menu_Init(&gui_menu, u8g2);
+  
+  gui_SignalTimeChange();
 }
 
 
@@ -310,10 +385,45 @@ void gui_Draw(void)
 
 void gui_Next(void)
 {
-  menu_NextFocus(&gui_menu);
+  if ( gui_menu.me_list == melist_active_alarm_menu )
+  {
+    disable_alarm();
+    if ( gui_alarm_list[gui_data.active_alarm_idx].snooze_count != 0 )
+    {
+      int i;
+      /* this is already the snooze alarm, so clear all and behave like the normal alarm off */
+      for( i = 0; i < GUI_ALARM_CNT; i++ )
+	gui_alarm_list[i].snooze_count = 0;
+    }
+    else
+    {
+      /* enable snooze */
+      gui_alarm_list[gui_data.active_alarm_idx].snooze_count = 1;
+    }
+    gui_data.is_alarm = 0;
+    gui_Recalculate();
+    menu_SetMEList(&gui_menu, melist_display_time, 0);
+  }
+  else
+  {
+    menu_NextFocus(&gui_menu);
+  }
 }
 
 void gui_Select(void)
 {
-  menu_Select(&gui_menu);
+  if ( gui_menu.me_list == melist_active_alarm_menu )
+  {
+    int i;
+    disable_alarm();
+    for( i = 0; i < GUI_ALARM_CNT; i++ )
+      gui_alarm_list[i].snooze_count = 0;
+    gui_data.is_alarm = 0;
+    gui_Recalculate();
+    menu_SetMEList(&gui_menu, melist_display_time, 0);
+  }
+  else
+  {
+    menu_Select(&gui_menu);
+  }
 }

@@ -50,6 +50,25 @@ etl2: bdfconv
 artos: bdfconv
 	./bdfconv -b 3 -d ../bdf/7x13.bdf ../bdf/ArtosSerif-8.bdf -a -v
 	
+hebrew: bdfconv
+	./bdfconv -v -f 1 -m '32-128,$$590-$$5ff,$$fb1d-$$fb4f' ../bdf/unifont.bdf -o u8g2_hebrew.c  -n u8g2_hebrew -d ../bdf/helvB18.bdf 
+
+korean: bdfconv
+	./bdfconv -v -f 1 -m '32-128,$$AC00-$$D7AF' ../bdf/unifont.bdf -o u8g2_korean.c  -n u8g2_korean -d ../bdf/helvB18.bdf 
+
+bengali: bdfconv
+	./bdfconv -v -f 1 -m '32-128,$$980-$$9ff' ../bdf/unifont.bdf -o u8g2_bengali.c  -n u8g2_bengali -d ../bdf/helvB12.bdf 
+
+urdu: bdfconv
+	./bdfconv -v -f 1 -m '32-128,$$600-$$6ff,$$750-$$77f,$$fb50-$$fdff,$$fe70-$$feff' ../bdf/unifont.bdf -o u8g2_urdu.c  -n u8g2_urdu -d ../bdf/helvB12.bdf 
+
+lubr24: bdfconv
+	./bdfconv -f 1 -m '32-255' -p 10 lubR24.bdf -o lubR24.c -n u8g2_font_lubR24 -d ../bdf/helvB12.bdf 
+
+lurs24: bdfconv
+	./bdfconv -f 1 -m '32-255' -p 10 luRS24.bdf -o luRS24.c -n u8g2_font_luRS24 -d ../bdf/helvB12.bdf 
+
+	
 #	http://stackoverflow.com/questions/713397/what-is-a-minimal-set-of-unicode-characters-for-reasonable-japanese-support
 
 chinese: bdfconv

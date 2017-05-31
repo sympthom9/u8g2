@@ -199,6 +199,11 @@
   U8G2_ST7920_128X64_1_SW_SPI 				Uno			Clip=17.2 Box=20.2  @=4.1 Pix=7.0		issue 200
   U8G2_ST7920_128X64_1_HW_SPI 				Uno			Clip=17.4 Box=21.8  @=4.2 Pix=7.4		issue 200
 
+  14 May 2017, Arduino 1.8
+  U8G2_SSD1306_128X64_NONAME_1_4W_HW_SPI	Uno	4MHz	Clip=31.7 Box=77.2  @=4.7 Pix=8.9		issue 215
+  U8G2_SSD1306_128X64_NONAME_1_4W_HW_SPI	Uno	8MHz	Clip=32.9 Box=84.1  @=4.7 Pix=9.0		issue 215
+
+  U8G2_ST7565_EA_DOGM128_1_4W_HW_SPI 		Uno	4MHz	Clip=32.0 Box=78.5  @=4.7 Pix=8.9		issue 215
 */
 
 

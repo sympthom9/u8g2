@@ -158,10 +158,11 @@ int me_cb_0_9(menu_t *menu, const me_t *me, uint8_t msg)
     case ME_MSG_IS_FOCUS:
       return 1;
     case ME_MSG_DRAW_FOCUS:
+      u8g2_SetFont(menu->u8g2, MENU_BIG_NUM);
       menu_DrawBoxFocus(menu, 
-	  me->x, 
+	  me->x+MENU_BIG_NUM_FOCUS_XO, 
 	  me->y - u8g2_GetAscent(menu->u8g2)-1, 
-	  u8g2_GetGlyphWidth(menu->u8g2, '0'), 
+	  u8g2_GetGlyphWidth(menu->u8g2, '0')+MENU_BIG_NUM_FOCUS_EXTRAX, 
 	  u8g2_GetAscent(menu->u8g2) + 2);
       return 1;
     case ME_MSG_SELECT:
@@ -222,10 +223,11 @@ int me_cb_0_23(menu_t *menu, const me_t *me, uint8_t msg)
     case ME_MSG_IS_FOCUS:
       return 1;
     case ME_MSG_DRAW_FOCUS:
+      u8g2_SetFont(menu->u8g2, MENU_BIG_NUM);
       menu_DrawBoxFocus(menu, 
-	  me->x, 
+	  me->x+MENU_BIG_NUM_FOCUS_XO, 
 	  me->y - u8g2_GetAscent(menu->u8g2)-1, 
-	  u8g2_GetGlyphWidth(menu->u8g2, '0')*2, 
+	  u8g2_GetGlyphWidth(menu->u8g2, '0')*2+MENU_BIG_NUM_FOCUS_EXTRAX, 
 	  u8g2_GetAscent(menu->u8g2) + 2);
       return 1;
     case ME_MSG_SELECT:
@@ -257,6 +259,25 @@ int me_cb_0_23_ro(menu_t *menu, const me_t *me, uint8_t msg)
   if ( msg == ME_MSG_IS_FOCUS )
     return 0;
   return me_cb_0_23(menu, me, msg);
+}
+
+
+int me_cb_0_9_small_ro(menu_t *menu, const me_t *me, uint8_t msg)
+{  
+  switch(msg)
+  {
+    case ME_MSG_IS_FOCUS:
+      return 0;
+    case ME_MSG_DRAW_FOCUS:
+      return 1;
+    case ME_MSG_SELECT:
+      return 1;
+    case ME_MSG_DRAW:
+      u8g2_SetFont(menu->u8g2, MENU_SMALL_FONT);
+      u8g2_DrawGlyph(menu->u8g2, me->x, me->y, *(uint8_t *)(me->val) + '0');
+      return 1;
+  }
+  return 0;
 }
 
 
@@ -324,7 +345,7 @@ int me_cb_1_31(menu_t *menu, const me_t *me, uint8_t msg)
 }
 
 /*
-  Name: 	me_cb_label
+  Name: 	me_cb_num_label
   can not get focus
   Arg:	char *
 */
@@ -441,6 +462,20 @@ int me_cb_label(menu_t *menu, const me_t *me, uint8_t msg)
       return 1;
   }
   return 0;
+}
+
+int me_cb_inv_label(menu_t *menu, const me_t *me, uint8_t msg)
+{  
+  int r = me_cb_label(menu, me, msg);
+  if ( msg == ME_MSG_DRAW )
+  {
+      menu_DrawBoxFocus(menu, 
+	  me->x-1, 
+	  me->y - u8g2_GetAscent(menu->u8g2)-1, 
+	  u8g2_GetUTF8Width(menu->u8g2, (char *)(me->arg))+2, 
+	  u8g2_GetAscent(menu->u8g2) + 2);
+  }
+  return r;
 }
 
 /*
@@ -561,6 +596,6 @@ void menu_Draw(menu_t *menu)
       menu_CallME(menu, ME_MSG_DRAW_FOCUS);
     }
   }
-    u8g2_DrawHLine(menu->u8g2, 0, 32, 128);
+   // u8g2_DrawHLine(menu->u8g2, 0, 32, 128);
 }
 
